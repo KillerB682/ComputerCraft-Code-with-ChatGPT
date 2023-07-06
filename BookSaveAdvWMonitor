@@ -114,4 +114,98 @@ local function writeBook()
   end
   
   -- Write the book content to the book peripheral
-  bookPeripheral
+  bookPeripheral.clearPages()
+  bookPeripheral.addPage(content)
+  bookPeripheral.setTitle(title)
+  bookPeripheral.setAuthor("My Name")
+  
+  -- Store the book content on a floppy disk
+  local file = fs.open("/disk/" .. title .. ".txt", "w")
+  file.write(content)
+  file.close()
+  
+  clearMonitor()
+  monitor.write("Book saved successfully!\n")
+end
+
+local function readBooks()
+  clearMonitor()
+  monitor.write("----- Read Books -----\n")
+  
+  local files = fs.list("/disk")
+  for _, file in ipairs(files) do
+    monitor.write(file .. "\n")
+  end
+end
+
+local function printBook()
+  clearMonitor()
+  monitor.write("----- Print a Book -----\n")
+  
+  local files = fs.list("/disk")
+  for _, file in ipairs(files) do
+    monitor.write(file .. "\n")
+  end
+  
+  monitor.write("Enter the book title to print:")
+  local title = read()
+
+  -- Check if the specified book exists on the floppy disk
+  local bookExists = false
+  for _, file in ipairs(files) do
+    if file == title .. ".txt" then
+      bookExists = true
+      break
+    end
+  end
+
+  if bookExists then
+    -- Read the book content from the floppy disk
+    local file = fs.open("/disk/" .. title .. ".txt", "r")
+    local bookContent = file.readAll()
+    file.close()
+
+    -- Copy the book content to a new book
+    bookPeripheral.clearPages()
+    bookPeripheral.addPage(bookContent)
+    bookPeripheral.setTitle("Printed Book - " .. title)
+    bookPeripheral.setAuthor("Printer")
+    
+    -- Play the custom audio file
+    speaker.playSound("path/to/audio_file.ogg")
+    
+    -- Wait for the audio playback to finish
+    while speaker.isPlaying() do
+      sleep(0.1)
+    end
+    
+    -- Output a redstone signal
+    redstoneOutput.setOutput(true)
+    sleep(1) -- Keep the redstone signal on for 1 second
+    redstoneOutput.setOutput(false)
+
+    clearMonitor()
+    monitor.write("Book printed successfully!\n")
+  else
+    clearMonitor()
+    monitor.write("Book not found on the floppy disk!\n")
+  end
+end
+
+-- Main loop
+while true do
+  drawMenu()
+  local option = waitForInput()
+  
+  clearMonitor()
+  
+  if option == "write" then
+    writeBook()
+  elseif option == "read" then
+    readBooks()
+  elseif option == "print" then
+    printBook()
+  end
+  
+  sleep(2) -- Display the result for 2 seconds before redrawing the menu
+end
