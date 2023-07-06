@@ -1,0 +1,117 @@
+local bookPeripheral -- Variable to store the book peripheral
+local diskDrive -- Variable to store the disk drive peripheral
+local monitor -- Variable to store the monitor peripheral
+local speaker -- Variable to store the speaker peripheral
+local redstoneOutput -- Variable to store the redstone output peripheral
+
+-- Find the first book peripheral connected
+for _, side in ipairs(peripheral.getNames()) do
+  if peripheral.getType(side) == "minecraft:writable_book" then
+    bookPeripheral = peripheral.wrap(side)
+    break
+  end
+end
+
+-- Find the first disk drive peripheral connected
+for _, side in ipairs(peripheral.getNames()) do
+  if peripheral.getType(side) == "drive" then
+    diskDrive = peripheral.wrap(side)
+    break
+  end
+end
+
+-- Find the first monitor peripheral connected
+for _, side in ipairs(peripheral.getNames()) do
+  if peripheral.getType(side) == "monitor" then
+    monitor = peripheral.wrap(side)
+    break
+  end
+end
+
+-- Find the first speaker peripheral connected
+for _, side in ipairs(peripheral.getNames()) do
+  if peripheral.getType(side) == "speaker" then
+    speaker = peripheral.wrap(side)
+    break
+  end
+end
+
+-- Find the first redstone output peripheral connected
+for _, side in ipairs(peripheral.getNames()) do
+  if peripheral.getType(side) == "redstone" and peripheral.call(side, "getOutput") then
+    redstoneOutput = peripheral.wrap(side)
+    break
+  end
+end
+
+if not bookPeripheral then
+  print("No book peripheral found!")
+  return
+end
+
+if not diskDrive then
+  print("No disk drive found!")
+  return
+end
+
+if not monitor then
+  print("No monitor found!")
+  return
+end
+
+if not speaker then
+  print("No speaker found!")
+  return
+end
+
+if not redstoneOutput then
+  print("No redstone output peripheral found!")
+  return
+end
+
+local function clearMonitor()
+  monitor.clear()
+  monitor.setCursorPos(1, 1)
+end
+
+local function drawMenu()
+  clearMonitor()
+  monitor.write("----- Book Menu -----\n")
+  monitor.write("1. Write Book\n")
+  monitor.write("2. Read Books\n")
+  monitor.write("3. Print a Book\n")
+  monitor.write("---------------------\n")
+  monitor.write("Select an option:")
+end
+
+local function waitForInput()
+  while true do
+    local event, side, x, y = os.pullEvent("monitor_touch")
+    if x >= 1 and x <= 20 and y == 2 then
+      return "write"
+    elseif x >= 1 and x <= 20 and y == 3 then
+      return "read"
+    elseif x >= 1 and x <= 20 and y == 4 then
+      return "print"
+    end
+  end
+end
+
+local function writeBook()
+  clearMonitor()
+  monitor.write("----- Write Book -----\n")
+  monitor.write("Enter the book title:")
+  local title = read()
+  
+  clearMonitor()
+  monitor.write("----- Write Book -----\n")
+  monitor.write("Enter the book content:\n")
+  local content = ""
+  local line = read()
+  while line ~= "done" do
+    content = content .. line .. "\n"
+    line = read()
+  end
+  
+  -- Write the book content to the book peripheral
+  bookPeripheral
