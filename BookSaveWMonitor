@@ -1,0 +1,124 @@
+local bookPeripheral -- Variable to store the book peripheral
+local diskDrive -- Variable to store the disk drive peripheral
+local monitor -- Variable to store the monitor peripheral
+
+-- Find the first book peripheral connected
+for _, side in ipairs(peripheral.getNames()) do
+  if peripheral.getType(side) == "minecraft:writable_book" then
+    bookPeripheral = peripheral.wrap(side)
+    break
+  end
+end
+
+-- Find the first disk drive peripheral connected
+for _, side in ipairs(peripheral.getNames()) do
+  if peripheral.getType(side) == "drive" then
+    diskDrive = peripheral.wrap(side)
+    break
+  end
+end
+
+-- Find the first monitor peripheral connected
+for _, side in ipairs(peripheral.getNames()) do
+  if peripheral.getType(side) == "monitor" then
+    monitor = peripheral.wrap(side)
+    break
+  end
+end
+
+if not bookPeripheral then
+  print("No book peripheral found!")
+  return
+end
+
+if not diskDrive then
+  print("No disk drive found!")
+  return
+end
+
+if not monitor then
+  print("No monitor found!")
+  return
+end
+
+local function clearMonitor()
+  monitor.clear()
+  monitor.setCursorPos(1, 1)
+end
+
+local function drawMenu()
+  clearMonitor()
+  monitor.write("----- Book Menu -----\n")
+  monitor.write("1. Write Book\n")
+  monitor.write("2. Read Books\n")
+  monitor.write("---------------------\n")
+  monitor.write("Select an option:")
+end
+
+local function waitForInput()
+  while true do
+    local event, side, x, y = os.pullEvent("monitor_touch")
+    if x >= 1 and x <= 20 and y == 2 then
+      return "write"
+    elseif x >= 1 and x <= 20 and y == 3 then
+      return "read"
+    end
+  end
+end
+
+local function writeBook()
+  clearMonitor()
+  monitor.write("----- Write Book -----\n")
+  monitor.write("Enter the book title:")
+  local title = read()
+  
+  clearMonitor()
+  monitor.write("----- Write Book -----\n")
+  monitor.write("Enter the book content:\n")
+  local content = ""
+  local line = read()
+  while line ~= "done" do
+    content = content .. line .. "\n"
+    line = read()
+  end
+  
+  -- Write the book content to the book peripheral
+  bookPeripheral.clearPages()
+  bookPeripheral.addPage(content)
+  bookPeripheral.setTitle(title)
+  bookPeripheral.setAuthor("My Name")
+  
+  -- Store the book content on a floppy disk
+  local file = fs.open("/disk/" .. title .. ".txt", "w")
+  file.write(content)
+  file.close()
+  
+  clearMonitor()
+  monitor.write("Book saved successfully!\n")
+end
+
+local function readBooks()
+  clearMonitor()
+  monitor.write("----- Read Books -----\n")
+  
+  local files = fs.list("/disk")
+  for _, file in ipairs(files) do
+    monitor.write(file .. "\n")
+  end
+end
+
+-- Main loop
+while true do
+  drawMenu()
+  local option = waitForInput()
+  
+  clearMonitor()
+  
+  if option == "write" then
+    writeBook()
+  elseif option == "read" then
+    readBooks()
+  end
+  
+  sleep(2) -- Display the result for 2 seconds before redrawing the menu
+end
